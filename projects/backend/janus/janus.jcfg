@@ -1,0 +1,45 @@
+# Janus Gateway Configuration (Development)
+# Source-of-truth originally lives in /infra.
+# Target location on Linux/WSL: /opt/janus/etc/janus/janus.jcfg
+
+general: {
+    configs_folder = "/opt/janus/etc/janus"
+    plugins_folder = "/opt/janus/lib/janus/plugins"
+    transports_folder = "/opt/janus/lib/janus/transports"
+    log_to_stdout = false
+    debug_level = 4
+    debug_timestamps = true
+    debug_colors = false
+    daemonize = false
+}
+
+certificates: {
+    cert_pem = "/opt/janus/share/janus/certs/mycert.pem"
+    cert_key = "/opt/janus/share/janus/certs/mycert.key"
+}
+
+nat: {
+    ice_lite = false
+    ice_tcp = false
+    full_trickle = true
+    ice_ignore_list = "vmnet"
+
+    # Si Janus está en un servidor con IP pública, configura el mapeo 1:1 para que
+    # los ICE candidates incluyan la IP correcta.
+    # Ejemplo:
+    # nat_1_1_mapping = "203.0.113.10"
+
+    # STUN ayuda a clientes detrás de NAT.
+    # Ejemplo (Google):
+    # stun_server = "stun.l.google.com"
+    # stun_port = 19302
+}
+
+media: {
+    rtp_port_range = "10000-10200"
+    dtls_mtu = 1200
+}
+
+# IMPORTANT: NO api_secret configured to match production
+# api_secret = "janusrocks"  # COMMENTED OUT - Production has no auth
+token_auth = false
