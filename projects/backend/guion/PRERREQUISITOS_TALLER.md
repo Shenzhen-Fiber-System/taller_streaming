@@ -31,7 +31,73 @@ Cualquiera de estos, actualizado a la última versión:
 ### D. Cuentas y Accesos 🔑
 Indispensable traer esto configurado desde casa:
 *   **Cuenta de Git:** (GitHub, GitLab o Bitbucket).
-*   **Permisos de Escritura:** Debes poder crear repositorios nuevos y pushear código (`git push`) desde la laptop que usarás en el taller. Verifica tus llaves SSH o Tokens.
+*   **Permisos de Escritura:** Debes poder crear repositorios nuevos y pushear código (`git push`) desde la laptop que usarás en el taller.
+
+#### 🔐 Conectarse a GitHub desde Git por Consola
+
+##### Paso 1: Crear Cuenta en GitHub (si no tienes)
+
+Ve a [github.com/signup](https://github.com/signup) y crea tu cuenta:
+- Email
+- Contraseña segura
+- Nombre de usuario
+
+##### Paso 2: Configurar Git en tu Terminal
+
+```bash
+# Verificar que Git está instalado
+git --version
+
+# Configurar tu identidad
+git config --global user.name "Tu Nombre Completo"
+git config --global user.email "tu-email@example.com"
+
+# Verificar configuración
+git config --global user.name
+git config --global user.email
+```
+
+##### Paso 3: Clonar un Repositorio
+
+Cuando clones un repositorio, **Git automáticamente abrirá tu navegador** pidiendo que inicies sesión en GitHub:
+
+```bash
+# Clonar cualquier repositorio
+git clone https://github.com/usuario/proyecto.git
+```
+
+**¿Qué pasará?**
+1. Git detecta que necesitas autenticación
+2. Abre automáticamente tu navegador
+3. Te pide iniciar sesión con tu **usuario y contraseña** de GitHub
+4. Autorizas la conexión
+5. ¡Listo! El repositorio se clona y Git guarda tus credenciales
+
+**Siguiente vez:** Git ya no te pedirá login, usa las credenciales guardadas automáticamente.
+
+#### ✅ Verificación para el Taller
+
+Asegúrate de tener:
+
+1. ✅ Cuenta en GitHub (memoriza usuario y contraseña)
+2. ✅ Git instalado (`git --version`)
+3. ✅ Identidad configurada:
+   ```bash
+   git config --global user.name "Tu Nombre"
+   git config --global user.email "tu-email@example.com"
+   ```
+4. ✅ Haber clonado al menos un repositorio para que Git guarde tus credenciales
+
+#### ❗ Solución de Problemas
+
+**Git no abre el navegador:**
+- Asegúrate de tener Git Credential Manager instalado (viene con Git moderno)
+- Descarga Git desde [git-scm.com](https://git-scm.com)
+
+**Borrar credenciales guardadas (Windows):**
+```bash
+git credential-manager erase https://github.com
+```
 
 ---
 
