@@ -5,9 +5,24 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.r2dbc.core.DatabaseClient;
 
+/**
+ * Inicializador de esquema de base de datos para metadatos de streams.
+ * <p>
+ * Crea las tablas necesarias (stream_meta, stream_session) si no existen
+ * al arrancar la aplicación.
+ */
 @Configuration
 public class StreamMetaSchemaInitializer {
 
+    /**
+     * Runner que se ejecuta al iniciar la aplicación para crear el esquema.
+     * <p>
+     * Ejecuta CREATE TABLE IF NOT EXISTS de forma bloqueante para garantizar
+     * que las tablas existan antes de que la aplicación comience a operar.
+     *
+     * @param db cliente de base de datos R2DBC
+     * @return ApplicationRunner que ejecuta la creación del esquema
+     */
     @Bean
     public ApplicationRunner streamMetaSchemaRunner(DatabaseClient db) {
         return args -> db.sql("""

@@ -1,10 +1,10 @@
-# 🛠️ Prerrequisitos del Taller: Streaming con WebRTC y WebFlux
+# Prerrequisitos del Taller: Streaming con WebRTC y WebFlux
 
-> **⚠️ IMPORTANTE:** Para aprovechar el taller, es VITAL que vengas con el entorno listo. No podremos detener la clase para instalar Java o configurar el IDE.
+> ** IMPORTANTE:** Para aprovechar el taller, es VITAL que vengas con el entorno listo. No podremos detener la clase para instalar Java o configurar el IDE.
 
 ---
 
-## 1. Hardware Mínimo Recomendado 💻
+## 1. Hardware Mínimo Recomendado 
 *   **RAM:** 8 GB mínimo (16 GB recomendado). Levantaremos Java + MySQL + IDE + Navegador.
 *   **CPU:** i5 de 8va gen o superior / Apple M1 o superior.
 *   **Espacio en Disco:** 10 GB libres.
@@ -12,7 +12,7 @@
 
 ---
 
-## 2. Software Requerido (Instalar ANTES del taller) 📦
+## 2. Software Requerido (Instalar ANTES del taller) 
 
 ### A. Java Development Kit (JDK) 21
 Necesitamos Java 21 LTS por las mejoras en Virtual Threads y Records.
@@ -28,12 +28,12 @@ Cualquiera de estos, actualizado a la última versión:
 *   **Git:** Para clonar el repositorio. [Descargar](https://git-scm.com/downloads)
 *   **cURL:** Para probar la API. (Viene en Windows/Mac/Linux modernos).
 
-### D. Cuentas y Accesos 🔑
+### D. Cuentas y Accesos 
 Indispensable traer esto configurado desde casa:
 *   **Cuenta de Git:** (GitHub, GitLab o Bitbucket).
 *   **Permisos de Escritura:** Debes poder crear repositorios nuevos y pushear código (`git push`) desde la laptop que usarás en el taller.
 
-#### 🔐 Conectarse a GitHub desde Git por Consola
+#### Conectarse a GitHub desde Git por Consola
 
 ##### Paso 1: Crear Cuenta en GitHub (si no tienes)
 
@@ -63,7 +63,7 @@ Cuando clones un repositorio, **Git automáticamente abrirá tu navegador** pidi
 
 ```bash
 # Clonar cualquier repositorio
-git clone https://github.com/usuario/proyecto.git
+git clone https://github.com/Shenzhen-Fiber-System/taller_streaming.git
 ```
 
 **¿Qué pasará?**
@@ -75,20 +75,20 @@ git clone https://github.com/usuario/proyecto.git
 
 **Siguiente vez:** Git ya no te pedirá login, usa las credenciales guardadas automáticamente.
 
-#### ✅ Verificación para el Taller
+#### Verificación para el Taller
 
 Asegúrate de tener:
 
-1. ✅ Cuenta en GitHub (memoriza usuario y contraseña)
-2. ✅ Git instalado (`git --version`)
-3. ✅ Identidad configurada:
+1. Cuenta en GitHub (memoriza usuario y contraseña)
+2. Git instalado (`git --version`)
+3. Identidad configurada:
    ```bash
    git config --global user.name "Tu Nombre"
    git config --global user.email "tu-email@example.com"
    ```
-4. ✅ Haber clonado al menos un repositorio para que Git guarde tus credenciales
+4. Haber clonado al menos un repositorio para que Git guarde tus credenciales
 
-#### ❗ Solución de Problemas
+#### Solución de Problemas
 
 **Git no abre el navegador:**
 - Asegúrate de tener Git Credential Manager instalado (viene con Git moderno)
@@ -101,7 +101,7 @@ git credential-manager erase https://github.com
 
 ---
 
-## 3. Conocimientos Previos Indispensables 🧠
+## 3. Conocimientos Previos Indispensables 
 > **Nota:** Si no manejas estos conceptos, te será muy difícil seguir el ritmo, ya que no nos detendremos a explicarlos.
 *   **Java Básico/Intermedio:** Clases, Interfaces, Lambdas.
 *   **HTTP:** Entender qué es GET, POST, Headers, JSON.
@@ -110,7 +110,7 @@ git credential-manager erase https://github.com
 
 ---
 
-## 4. 🚀 Generando el Proyecto (Spring Initializr)
+## 4.  Generando el Proyecto (Spring Initializr)
 
 Si quieres practicar desde cero o entender cómo se creó el esqueleto del proyecto, sigue estos pasos:
 
@@ -128,7 +128,7 @@ Si quieres practicar desde cero o entender cómo se creó el esqueleto del proye
 *   **Packaging:** Jar
 *   **Java:** 21
 
-### Paso 3: Dependencias (Dependencies) - **CRÍTICO** ⚠️
+### Paso 3: Dependencias (Dependencies) - **CRÍTICO** 
 Busca y agrega (ADD DEPENDENCIES) las siguientes:
 
 1.  **Spring Reactive Web** (No usar "Spring Web" normal)
@@ -154,11 +154,11 @@ Busca y agrega (ADD DEPENDENCIES) las siguientes:
 
 ---
 
-## 5. Configuración Final (Checklist) ✅
+## 5. Configuración Final (Checklist) 
 
 Una vez abierto el proyecto generado:
 
-### Paso 4.5: Dependencias Manuales (Dotenv) 🛠️
+### Paso 4.5: Dependencias Manuales (Dotenv) 
 La librería para leer archivos `.env` no está en el Initializr, así que debemos agregarla manualmente al `pom.xml`:
 
 1.  Abre el archivo `pom.xml`.
@@ -175,7 +175,7 @@ La librería para leer archivos `.env` no está en el Initializr, así que debem
 
 ---
 
-## 5. Configuración Final (Checklist) ✅
+## 5. Configuración Final (Checklist) 
 
 1.  **Verificar compilación:**
     Ejecuta `./mvnw clean package -DskipTests` (o `mvnw.cmd` en Windows). Debería terminar en `BUILD SUCCESS`.
@@ -195,5 +195,3 @@ La librería para leer archivos `.env` no está en el Initializr, así que debem
         username: root
         password: password
     ```
-
-¡Listo! Ya tienes el entorno preparado para la **Jornada 1**. 🚀

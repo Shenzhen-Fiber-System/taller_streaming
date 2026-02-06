@@ -18,6 +18,15 @@ import java.util.List;
  */
 public class DotenvInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
+    /**
+     * Inicializa el contexto de aplicación cargando variables desde el archivo .env.
+     * <p>
+     * Lee el archivo .env línea por línea, procesa pares KEY=VALUE y los establece
+     * como propiedades del sistema si no existen como variables de entorno o
+     * propiedades del sistema previamente.
+     *
+     * @param applicationContext el contexto de aplicación de Spring a inicializar
+     */
     @Override
     public void initialize(ConfigurableApplicationContext applicationContext) {
         Path dotenvPath = resolveDotenvPath();
@@ -64,6 +73,14 @@ public class DotenvInitializer implements ApplicationContextInitializer<Configur
         }
     }
 
+    /**
+     * Resuelve la ruta del archivo .env en el sistema de archivos.
+     * <p>
+     * Busca primero en el directorio actual (./env) y luego en la ruta
+     * del monorepo (apps/backend/streaming/.env).
+     *
+     * @return la ruta del archivo .env si existe, null en caso contrario
+     */
     private Path resolveDotenvPath() {
         Path local = Path.of(".env");
         if (Files.isRegularFile(local)) {

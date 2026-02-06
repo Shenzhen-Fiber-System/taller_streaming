@@ -10,6 +10,12 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+/**
+ * Filtro para registrar (log) todas las peticiones HTTP entrantes.
+ * <p>
+ * Registra el método, ruta, código de respuesta y tiempo de procesamiento.
+ * Se puede habilitar/deshabilitar mediante la propiedad http.logging.enabled.
+ */
 @Component
 public class HttpRequestLoggingFilter implements WebFilter {
 
@@ -17,10 +23,25 @@ public class HttpRequestLoggingFilter implements WebFilter {
 
     private final boolean enabled;
 
+    /**
+     * Constructor que inyecta la configuración de habilitación del logging.
+     *
+     * @param enabled true para habilitar el logging de peticiones HTTP, false para deshabilitarlo
+     */
     public HttpRequestLoggingFilter(@Value("${http.logging.enabled:false}") boolean enabled) {
         this.enabled = enabled;
     }
 
+    /**
+     * Filtra cada petición HTTP para registrar información de la misma.
+     * <p>
+     * Registra: ID de petición, método HTTP, ruta, código de estado y tiempo de procesamiento.
+     * Si está deshabilitado, pasa la petición sin registrar nada.
+     *
+     * @param exchange el intercambio servidor-web de la petición actual
+     * @param chain la cadena de filtros a ejecutar
+     * @return Mono<Void> que completa cuando el filtrado termina
+     */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         if (!enabled) {

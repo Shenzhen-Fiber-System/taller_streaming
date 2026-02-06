@@ -15,15 +15,35 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * Implementación del repositorio de streams usando R2DBC (MySQL reactivo).
+ * <p>
+ * Utiliza DatabaseClient de Spring para ejecutar SQL reactivo con programación
+ * funcional. Soporta upsert, búsqueda con wildcards, y paginación eficiente.
+ */
 @Repository
 public class R2dbcStreamMetaRepository implements StreamMetaRepository {
 
     private final DatabaseClient db;
 
+    /**
+     * Constructor que inyecta el cliente de base de datos R2DBC.
+     *
+     * @param db cliente para ejecutar consultas SQL reactivas
+     */
     public R2dbcStreamMetaRepository(DatabaseClient db) {
         this.db = db;
     }
 
+    /**
+     * Guarda o actualiza un stream con estrategia upsert.
+     * <p>
+     * Utiliza INSERT ... ON DUPLICATE KEY UPDATE para MySQL.
+     * Preserva created_at original en actualizaciones.
+     *
+     * @param meta el stream a guardar
+     * @return Mono con el stream guardado
+     */
     @Override
     public Mono<StreamMeta> save(StreamMeta meta) {
         // Upsert by primary key `id`.
@@ -58,6 +78,19 @@ public class R2dbcStreamMetaRepository implements StreamMetaRepository {
         return spec.fetch().rowsUpdated().thenReturn(meta);
     }
 
+    /**
+     * Método auxiliar para vincular (bind) valores nullables en SQL.
+     * <p>
+     * Si el valor es null, usa bindNull con el tipo apropiado para evitar
+     * errores de tipo en la BD.
+     *
+     * @param spec especificación de consulta actual
+     * @param index índice del parámetro (base 0)
+     * @param value valor a vincular (puede ser null)
+     * @param type clase del tipo del valor
+     * @param <T> tipo genérico del valor
+     * @return especificación actualizada
+     */
         private static <T> DatabaseClient.GenericExecuteSpec bindNullable(
             DatabaseClient.GenericExecuteSpec spec,
             int index,
@@ -67,6 +100,12 @@ public class R2dbcStreamMetaRepository implements StreamMetaRepository {
         return value == null ? spec.bindNull(index, type) : spec.bind(index, value);
         }
 
+    /**
+     * Busca un stream por su ID.
+     *
+     * @param id UUID del stream
+     * @return Mono con el stream encontrado, o vacío si no existe
+     */
     @Override
     public Mono<StreamMeta> findById(UUID id) {
         String sql = """
@@ -89,6 +128,12 @@ public class R2dbcStreamMetaRepository implements StreamMetaRepository {
                 .one();
     }
 
+    /**
+     * Busca un stream por su clave única (streamKey).
+     *
+     * @param streamKey clave del stream
+     * @return Mono con el stream encontrado, o vacío si no existe
+     */
     @Override
     public Mono<StreamMeta> findByStreamKey(String streamKey) {
         String sql = """
@@ -111,6 +156,11 @@ public class R2dbcStreamMetaRepository implements StreamMetaRepository {
                 .one();
     }
 
+    /**
+     * Obtiene todos los streams ordenados por fecha de creación descendente.
+     *
+     * @return Flux con todos los streams
+     */
     @Override
     public Flux<StreamMeta> findAll() {
         String sql = """
@@ -131,6 +181,18 @@ public class R2dbcStreamMetaRepository implements StreamMetaRepository {
                 .all();
     }
 
+    /**
+     * Busca streams con criterios y paginación.
+     * <p>
+     * Aplica búsqueda con LIKE en campos especificados,
+     * limita resultados y aplica offset para paginación.
+     *
+     * @param search término de búsqueda (null/vacío = sin filtro)
+     * @param fields campos donde buscar
+     * @param page número de página (base 0)
+     * @param size tamaño de página (máx 200)
+     * @return Flux con los streams encontrados
+     */
     @Override
     public Flux<StreamMeta> searchPage(String search, List<String> fields, int page, int size) {
         int safePage = Math.max(0, page);
@@ -160,6 +222,13 @@ public class R2dbcStreamMetaRepository implements StreamMetaRepository {
                 .all();
     }
 
+    /**
+     * Cuenta el total de streams que coinciden con los criterios.
+     *
+     * @param search término de búsqueda
+     * @param fields campos donde buscar
+     * @return Mono con el conteo total
+     */
     @Override
     public Mono<Long> countSearch(String search, List<String> fields) {
         SearchSql built = buildSearchSql(search, fields, true);
@@ -176,9 +245,23 @@ public class R2dbcStreamMetaRepository implements StreamMetaRepository {
                 .defaultIfEmpty(0L);
     }
 
+    /**
+     * Clase record auxiliar para encapsular SQL y argumentos de búsqueda.
+     */
     private record SearchSql(String sql, List<Object> args) {
     }
 
+    /**
+     * Construye la consulta SQL dinámica para búsqueda.
+     * <p>
+     * Genera cláusulas WHERE con LIKE según los campos especificados.
+     * Soporta modo COUNT o modo SELECT completo.
+     *
+     * @param search término de búsqueda
+     * @param fields campos donde buscar (null = por defecto: title, description)
+     * @param countOnly true para SELECT COUNT(*), false para SELECT completo
+     * @return SearchSql con la consulta y argumentos preparados
+     */
     private SearchSql buildSearchSql(String search, List<String> fields, boolean countOnly) {
         String base = countOnly
                 ? "SELECT COUNT(*) FROM stream_meta"
@@ -222,6 +305,19 @@ public class R2dbcStreamMetaRepository implements StreamMetaRepository {
         return new SearchSql(base + where, args);
     }
 
+    /**
+     * Mapea una fila de resultado SQL a una entidad StreamMeta.
+     *
+     * @param id UUID como String
+     * @param streamKey clave del stream
+     * @param title título
+     * @param description descripción
+     * @param status estado como String (CREATED, LIVE, ENDED)
+     * @param createdAt timestamp de creación
+     * @param startedAt timestamp de inicio (nullable)
+     * @param endedAt timestamp de finalización (nullable)
+     * @return entidad StreamMeta mapeada
+     */
     private static StreamMeta mapRow(
             String id,
             String streamKey,
