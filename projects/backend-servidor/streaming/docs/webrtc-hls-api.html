@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ourshop Streaming – WebRTC → Janus → HLS (API)</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.12);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.70);
+      --link: #7dd3fc;
+      --ok: #34d399;
+      --warn: #fbbf24;
+      --bad: #fb7185;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f7fafc;
+        --panel: rgba(2,6,23,0.05);
+        --border: rgba(2,6,23,0.12);
+        --text: rgba(2,6,23,0.92);
+        --muted: rgba(2,6,23,0.70);
+        --link: #0369a1;
+      }
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 700px at 20% 0%, rgba(59,130,246,0.16), transparent 55%),
+                  radial-gradient(900px 600px at 85% 20%, rgba(16,185,129,0.14), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.45;
+    }
+    header {
+      padding: 28px 20px 8px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 22px;
+      letter-spacing: 0.2px;
+    }
+    header p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 14px 20px 40px;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+    }
+
+    nav {
+      position: sticky;
+      top: 12px;
+      align-self: start;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    nav .title {
+      font-weight: 600;
+      font-size: 13px;
+      margin: 2px 0 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    nav a {
+      display: block;
+      padding: 7px 10px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-size: 14px;
+    }
+    nav a:hover {
+      background: rgba(125, 211, 252, 0.12);
+      color: var(--text);
+    }
+
+    section {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    section h2 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+    section h3 {
+      margin: 16px 0 8px;
+      font-size: 16px;
+    }
+
+    .pill {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      margin-right: 8px;
+      white-space: nowrap;
+    }
+
+    .endpoint {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 10px 0 14px;
+    }
+    .endpoint .head {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      flex-wrap: wrap;
+    }
+    .method {
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+    .GET { color: var(--ok); border-color: rgba(52,211,153,0.5); }
+    .POST { color: #60a5fa; border-color: rgba(96,165,250,0.5); }
+    .PUT { color: var(--warn); border-color: rgba(251,191,36,0.5); }
+    .DELETE { color: var(--bad); border-color: rgba(251,113,133,0.5); }
+
+    .path {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .endpoint .body {
+      padding: 12px;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 900px) {
+      .grid2 { grid-template-columns: 1fr; }
+    }
+
+    pre {
+      margin: 8px 0 0;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.20);
+      overflow: auto;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    code { font-family: var(--mono); }
+
+    .note {
+      padding: 10px 12px;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.03);
+      margin-top: 10px;
+    }
+
+    .btn {
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+    }
+    .btn:hover { background: rgba(255,255,255,0.07); }
+
+    a { color: var(--link); }
+    ul { margin: 8px 0 0 18px; }
+    li { margin: 4px 0; }
+    .muted { color: var(--muted); }
+    .mono { font-family: var(--mono); }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Ourshop Streaming – Documentación API (WebRTC → Janus → HLS)</h1>
+  <p>Archivo estático para el workshop: endpoints + JSON de ejemplo + flujo completo (sin <span class="mono">sessionId</span> en el cliente).</p>
+</header>
+
+<main>
+  <nav>
+    <div class="title">Contenido</div>
+    <a href="#overview">1) Overview</a>
+    <a href="#flow">2) Flujo End-to-End</a>
+    <a href="#streams">3) Streams (Meta)</a>
+    <a href="#webrtc-config">4) WebRTC Config</a>
+    <a href="#webrtc-signaling">5) WebRTC Signaling</a>
+    <a href="#hls">6) HLS (Playback)</a>
+    <a href="#errors">7) Errores comunes</a>
+    <a href="#env">8) Variables & Config</a>
+  </nav>
+
+  <div>
+
+    <section id="overview">
+      <h2>1) Overview</h2>
+      <p class="muted">Este backend expone APIs para:</p>
+      <ul>
+        <li><b>Gestión de stream meta</b> (crear/listar/iniciar/finalizar)</li>
+        <li><b>Señalización WebRTC</b> (offer/answer + ICE), sin sesiones en el cliente</li>
+        <li><b>Playback HLS</b> por HTTP (playlist <span class="mono">index.m3u8</span> + segmentos <span class="mono">.ts</span>)</li>
+      </ul>
+
+      <div class="note">
+        <div><b>Base URL típica en VPS (single domain + paths)</b></div>
+        <div class="muted">Ejemplo: <span class="mono">https://taller.ourshop.work</span></div>
+      </div>
+
+      <div class="note">
+        <div><b>Convención</b></div>
+        <div class="muted">Los endpoints REST están bajo <span class="mono">/api/v1</span>. El HLS se sirve bajo <span class="mono">/webrtc-hls</span>.</div>
+      </div>
+    </section>
+
+
+    <section id="flow">
+      <h2>2) Flujo End-to-End (Cliente → API → Janus → FFmpeg → HLS)</h2>
+      <ol>
+        <li>
+          <b>Crear stream meta</b> → obtienes <span class="mono">streamId</span> y <span class="mono">streamKey</span>.
+        </li>
+        <li>
+          <b>Configurar ICE</b> → llamas a <span class="mono">/api/v1/webrtc/ice-servers</span> y configuras tu <span class="mono">RTCPeerConnection</span> con esos <span class="mono">iceServers</span>.
+        </li>
+        <li>
+          <b>Offer</b> → generas <span class="mono">SDP offer</span> en el navegador/app y lo envías a:
+          <span class="mono">POST /api/v1/streams/{streamId}/webrtc/offer</span>.
+          <ul>
+            <li>El backend crea/usa 1 publisher interno (por <span class="mono">streamId</span>).</li>
+            <li>El backend negocia con Janus y devuelve <span class="mono">SDP answer</span>.</li>
+            <li>El backend inicia el pipeline RTP→FFmpeg y devuelve <span class="mono">hlsUrl</span> para el playback.</li>
+          </ul>
+        </li>
+        <li>
+          <b>ICE Trickle</b> → cada <span class="mono">RTCIceCandidate</span> se envía a:
+          <span class="mono">POST /api/v1/streams/{streamId}/webrtc/ice</span>.
+        </li>
+        <li>
+          <b>Playback</b> → reproducir <span class="mono">hlsUrl</span> con hls.js o player HLS.
+        </li>
+        <li>
+          <b>Cerrar</b> → cuando el cliente termina: <span class="mono">DELETE /api/v1/streams/{streamId}/webrtc</span>.
+        </li>
+      </ol>
+
+      <div class="note">
+        <div><b>Importante</b></div>
+        <div class="muted">Aunque el backend maneje “estado” internamente, el cliente NO administra <span class="mono">sessionId</span>. El identificador estable del flujo es <span class="mono">streamId</span>.</div>
+      </div>
+    </section>
+
+
+    <section id="streams">
+      <h2>3) Streams (Meta)</h2>
+      <p class="muted">Endpoints para crear y administrar el “registro” del stream (título/estado) y obtener el <span class="mono">streamKey</span>.</p>
+
+      <div class="endpoint">
+        <div class="head">
+          <span class="method POST">POST</span>
+          <div class="path">/api/v1/streams</div>
+        </div>
+        <div class="body">
+          <div class="grid2">
+            <div>
+              <div class="pill">Request JSON</div>
+              <pre>{
+  "title": "Clase 01 - WebRTC",
+  "description": "Demo WebRTC → HLS"
+}</pre>
+            </div>
+            <div>
+              <div class="pill">Response JSON</div>
+              <pre>{
+  "id": "7c1c4c8a-3c0b-4d4a-a4f1-9f6b03fb8a34",
+  "streamKey": "s_7c1c4c8a3c0b4d4aa4f19f6b03fb8a34",
+  "title": "Clase 01 - WebRTC",
+  "description": "Demo WebRTC → HLS",
+  "status": "CREATED",
+  "createdAt": "2026-01-22T10:00:00Z",
+  "startedAt": null,
+  "endedAt": null
+}</pre>
+            </div>
+          </div>
+          <div class="pill">cURL</div>
+          <pre>curl -X POST "https://taller.ourshop.work/api/v1/streams" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Clase 01 - WebRTC","description":"Demo WebRTC → HLS"}'</pre>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="head">
+          <span class="method GET">GET</span>
+          <div class="path">/api/v1/streams?page=0&amp;size=20&amp;search=&amp;fields=title</div>
+        </div>
+        <div class="body">
+          <div class="pill">Response JSON</div>
+          <pre>{
+  "items": [
+    {
+      "id": "7c1c4c8a-3c0b-4d4a-a4f1-9f6b03fb8a34",
+      "streamKey": "s_7c1c4c8a3c0b4d4aa4f19f6b03fb8a34",
+      "title": "Clase 01 - WebRTC",
+      "description": "Demo WebRTC → HLS",
+      "status": "CREATED",
+      "createdAt": "2026-01-22T10:00:00Z",
+      "startedAt": null,
+      "endedAt": null
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 1,
+  "totalPages": 1
+}</pre>
+          <div class="pill">cURL</div>
+          <pre>curl "https://taller.ourshop.work/api/v1/streams?page=0&amp;size=20"</pre>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="head">
+          <span class="method GET">GET</span>
+          <div class="path">/api/v1/streams/{id}</div>
+        </div>
+        <div class="body">
+          <div class="pill">cURL</div>
+          <pre>curl "https://taller.ourshop.work/api/v1/streams/7c1c4c8a-3c0b-4d4a-a4f1-9f6b03fb8a34"</pre>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="head">
+          <span class="method PUT">PUT</span>
+          <div class="path">/api/v1/streams/{id}/start</div>
+        </div>
+        <div class="body">
+          <div class="pill">cURL</div>
+          <pre>curl -X PUT "https://taller.ourshop.work/api/v1/streams/7c1c4c8a-3c0b-4d4a-a4f1-9f6b03fb8a34/start"</pre>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="head">
+          <span class="method PUT">PUT</span>
+          <div class="path">/api/v1/streams/{id}/end</div>
+        </div>
+        <div class="body">
+          <div class="pill">cURL</div>
+          <pre>curl -X PUT "https://taller.ourshop.work/api/v1/streams/7c1c4c8a-3c0b-4d4a-a4f1-9f6b03fb8a34/end"</pre>
+        </div>
+      </div>
+
+    </section>
+
+
+    <section id="webrtc-config">
+      <h2>4) WebRTC Config</h2>
+      <p class="muted">Endpoints de diagnóstico y para que el cliente obtenga STUN/TURN (ICE servers).</p>
+
+      <div class="endpoint">
+        <div class="head">
+          <span class="method GET">GET</span>
+          <div class="path">/api/v1/webrtc/health</div>
+        </div>
+        <div class="body">
+          <div class="grid2">
+            <div>
+              <div class="pill">Response (OK)</div>
+              <pre>{
+  "enabled": true,
+  "turnConfigured": false,
+  "iceServersCount": 2
+}</pre>
+            </div>
+            <div>
+              <div class="pill">Response (disabled → 503)</div>
+              <pre>{
+  "enabled": false,
+  "turnConfigured": false,
+  "iceServersCount": 0
+}</pre>
+            </div>
+          </div>
+          <div class="pill">cURL</div>
+          <pre>curl "https://taller.ourshop.work/api/v1/webrtc/health"</pre>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="head">
+          <span class="method GET">GET</span>
+          <div class="path">/api/v1/webrtc/ice-servers</div>
+        </div>
+        <div class="body">
+          <div class="grid2">
+            <div>
+              <div class="pill">Response (sin TURN)</div>
+              <pre>{
+  "enabled": true,
+  "iceServers": [
+    { "urls": ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }
+  ],
+  "turnAvailable": false,
+  "turnCredentials": null
+}</pre>
+            </div>
+            <div>
+              <div class="pill">Response (con TURN)</div>
+              <pre>{
+  "enabled": true,
+  "iceServers": [
+    { "urls": ["stun:stun.l.google.com:19302"] },
+    { "urls": ["turn:turn.example.com:3478"], "username": "user", "credential": "pass" }
+  ],
+  "turnAvailable": true,
+  "turnCredentials": { "username": "user", "credential": "pass" }
+}</pre>
+            </div>
+          </div>
+
+          <div class="pill">cURL</div>
+          <pre>curl "https://taller.ourshop.work/api/v1/webrtc/ice-servers"</pre>
+
+          <div class="note">
+            <div><b>Cómo se usa en JS</b></div>
+            <pre>const cfg = await fetch('/api/v1/webrtc/ice-servers').then(r => r.json());
+const pc = new RTCPeerConnection({ iceServers: cfg.iceServers });</pre>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+
+    <section id="webrtc-signaling">
+      <h2>5) WebRTC Signaling (sin sesiones)</h2>
+      <p class="muted">El cliente envía offer/ICE y recibe answer + URL HLS. El backend administra el estado interno por <span class="mono">streamId</span>.</p>
+
+      <div class="endpoint">
+        <div class="head">
+          <span class="method POST">POST</span>
+          <div class="path">/api/v1/streams/{streamId}/webrtc/offer</div>
+        </div>
+        <div class="body">
+          <div class="grid2">
+            <div>
+              <div class="pill">Request JSON</div>
+              <pre>{
+  "type": "offer",
+  "sdp": "v=0... (SDP OFFER COMPLETO)",
+  "streamKey": "s_7c1c4c8a3c0b4d4aa4f19f6b03fb8a34",
+  "facing": "user",
+  "platform": "web",
+  "filtersEnabled": false
+}</pre>
+            </div>
+            <div>
+              <div class="pill">Response JSON</div>
+              <pre>{
+  "type": "answer",
+  "sdp": "v=0... (SDP ANSWER COMPLETO)",
+  "status": "OK",
+  "timestamp": 1769076000000,
+  "hlsUrl": "https://taller.ourshop.work/webrtc-hls/s_7c1c4c8a3c0b4d4aa4f19f6b03fb8a34/index.m3u8",
+  "streamKey": "s_7c1c4c8a3c0b4d4aa4f19f6b03fb8a34"
+}</pre>
+            </div>
+          </div>
+
+          <div class="pill">cURL</div>
+          <pre>curl -X POST "https://taller.ourshop.work/api/v1/streams/7c1c4c8a-3c0b-4d4a-a4f1-9f6b03fb8a34/webrtc/offer" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type":"offer",
+    "sdp":"v=0...",
+    "streamKey":"s_7c1c4c8a3c0b4d4aa4f19f6b03fb8a34",
+    "facing":"user",
+    "platform":"web",
+    "filtersEnabled":false
+  }'</pre>
+
+          <div class="note">
+            <div><b>JS (mínimo)</b></div>
+            <pre>// 1) createOffer + setLocalDescription
+const offer = await pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
+await pc.setLocalDescription(offer);
+
+// 2) POST /offer
+const answer = await fetch(`/api/v1/streams/${streamId}/webrtc/offer`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ sdp: offer.sdp, type: offer.type, streamKey, platform: 'web' })
+}).then(r => r.json());
+
+// 3) setRemoteDescription
+await pc.setRemoteDescription({ type: 'answer', sdp: answer.sdp });
+
+// 4) usar answer.hlsUrl para reproducir HLS</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="head">
+          <span class="method POST">POST</span>
+          <div class="path">/api/v1/streams/{streamId}/webrtc/ice</div>
+        </div>
+        <div class="body">
+          <div class="grid2">
+            <div>
+              <div class="pill">Request JSON</div>
+              <pre>{
+  "candidate": "candidate:842163049 1 udp 1677729535 192.168.1.10 50463 typ srflx raddr 0.0.0.0 rport 0",
+  "sdpMid": "0",
+  "sdpMLineIndex": 0
+}</pre>
+            </div>
+            <div>
+              <div class="pill">Response</div>
+              <pre>// 204 No Content</pre>
+            </div>
+          </div>
+
+          <div class="pill">cURL</div>
+          <pre>curl -X POST "https://taller.ourshop.work/api/v1/streams/7c1c4c8a-3c0b-4d4a-a4f1-9f6b03fb8a34/webrtc/ice" \
+  -H "Content-Type: application/json" \
+  -d '{"candidate":"candidate:...","sdpMid":"0","sdpMLineIndex":0}'</pre>
+
+          <div class="note">
+            <div><b>JS (trickle ICE)</b></div>
+            <pre>pc.onicecandidate = (ev) => {
+  if (!ev.candidate) return;
+  fetch(`/api/v1/streams/${streamId}/webrtc/ice`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      candidate: ev.candidate.candidate,
+      sdpMid: ev.candidate.sdpMid,
+      sdpMLineIndex: ev.candidate.sdpMLineIndex
+    })
+  });
+};</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="head">
+          <span class="method DELETE">DELETE</span>
+          <div class="path">/api/v1/streams/{streamId}/webrtc</div>
+        </div>
+        <div class="body">
+          <div class="pill">Response</div>
+          <pre>// 204 No Content</pre>
+          <div class="pill">cURL</div>
+          <pre>curl -X DELETE "https://taller.ourshop.work/api/v1/streams/7c1c4c8a-3c0b-4d4a-a4f1-9f6b03fb8a34/webrtc"</pre>
+        </div>
+      </div>
+
+    </section>
+
+
+    <section id="hls">
+      <h2>6) HLS (Playback)</h2>
+      <p class="muted">Estos endpoints sirven archivos desde disco. Normalmente los consume hls.js; no requieren JSON.</p>
+
+      <div class="endpoint">
+        <div class="head">
+          <span class="method GET">GET</span>
+          <div class="path">/webrtc-hls/{streamKey}/index.m3u8</div>
+        </div>
+        <div class="body">
+          <div class="pill">Ejemplo</div>
+          <pre>GET https://taller.ourshop.work/webrtc-hls/s_7c1c4c8a3c0b4d4aa4f19f6b03fb8a34/index.m3u8</pre>
+          <div class="pill">Notas</div>
+          <pre>- Content-Type: application/vnd.apple.mpegurl
+- Cache-Control: no-store</pre>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="head">
+          <span class="method GET">GET</span>
+          <div class="path">/webrtc-hls/{streamKey}/{segment}.ts</div>
+        </div>
+        <div class="body">
+          <div class="pill">Ejemplo</div>
+          <pre>GET https://taller.ourshop.work/webrtc-hls/s_7c1c4c8a3c0b4d4aa4f19f6b03fb8a34/000001.ts</pre>
+          <div class="pill">Notas</div>
+          <pre>- Content-Type: video/mp2t
+- Cache-Control: public, max-age=30</pre>
+        </div>
+      </div>
+
+      <div class="note">
+        <div><b>Mini ejemplo de reproducción (hls.js)</b></div>
+        <pre>// const video = document.querySelector('video');
+// const hlsUrl = answer.hlsUrl;
+// if (Hls.isSupported()) {
+//   const hls = new Hls();
+//   hls.loadSource(hlsUrl);
+//   hls.attachMedia(video);
+// } else {
+//   video.src = hlsUrl; // Safari
+// }</pre>
+      </div>
+    </section>
+
+
+    <section id="errors">
+      <h2>7) Errores comunes</h2>
+      <ul>
+        <li><b>503 en /api/v1/webrtc/*</b>: <span class="mono">WEBRTC_ENABLED=false</span> o config no cargada.</li>
+        <li><b>HLS 404</b>: aún no se generó el playlist/segmento, o el <span class="mono">WEBRTC_HLS_OUTPUT_DIR</span> no coincide, o permisos del directorio.</li>
+        <li><b>HLS sin segmentos</b>: revisar <span class="mono">ffmpeg.log</span> del stream (en el output dir) y puertos UDP/rtp_forward.</li>
+        <li><b>ICE falla en redes móviles</b>: configurar TURN y confirmar que Nginx/Firewall permite el tráfico necesario.</li>
+      </ul>
+    </section>
+
+
+    <section id="env">
+      <h2>8) Variables & Config</h2>
+      <p class="muted">Propiedades principales (ver <span class="mono">application.yml</span>):</p>
+      <pre>server.port=8087
+
+# Janus
+a) JANUS_URL=http://localhost:8088
+
+# WebRTC
+WEBRTC_ENABLED=true
+WEBRTC_STUN_SERVERS=stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302
+WEBRTC_TURN_SERVER=
+WEBRTC_TURN_USERNAME=
+WEBRTC_TURN_CREDENTIAL=
+
+# HLS
+WEBRTC_HLS_OUTPUT_DIR=/var/lib/ourshop/webrtc-hls
+WEBRTC_HLS_PUBLIC_BASE_URL=https://taller.ourshop.work</pre>
+
+      <div class="note">
+        <div><b>Output dir en VPS</b></div>
+        <pre>sudo mkdir -p /var/lib/ourshop/webrtc-hls
+sudo chown -R deploy:deploy /var/lib/ourshop/webrtc-hls</pre>
+      </div>
+    </section>
+
+    <section>
+      <h2>Extra: copiar ejemplos rápido</h2>
+      <p class="muted">Tip: selecciona un bloque <span class="mono">pre</span> y copia. Si quieres, puedo agregar botones “Copy” en cada bloque (JS) para que sea más cómodo.</p>
+    </section>
+
+  </div>
+</main>
+
+<script>
+  // (Opcional) helpers muy mínimos, sin dependencias.
+  // Dejamos el HTML estático y portable.
+</script>
+
+</body>
+</html>
