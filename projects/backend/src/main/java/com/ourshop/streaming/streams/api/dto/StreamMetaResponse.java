@@ -2,8 +2,12 @@ package com.ourshop.streaming.streams.api.dto;
 
 import com.ourshop.streaming.streams.domain.StreamMeta;
 import com.ourshop.streaming.streams.domain.StreamStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public record StreamMetaResponse(
@@ -35,4 +39,5 @@ public record StreamMetaResponse(
           meta.endedAt()
         );
     }
+
 }
