@@ -18,4 +18,6 @@ public interface StreamMetaRepository {
     Flux<StreamMeta> findAll();
 
     Flux<StreamMeta> searchPage(String search, List<String> fields, int page, int size);
+
+    Mono<Long> countSearch(String search, List<String> fields);
 }

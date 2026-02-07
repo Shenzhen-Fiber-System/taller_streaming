@@ -156,6 +156,22 @@ public class R2dbcStreamMetaRepository implements StreamMetaRepository {
                 .all();
     }
 
+    @Override
+    public Mono<Long> countSearch(String search, List<String> fields) {
+        SearchSql built = buildSearchSql(search, fields, true);
+
+        DatabaseClient.GenericExecuteSpec spec = db.sql(built.sql);
+        int idx = 0;
+        for (Object arg : built.args) {
+            spec = spec.bind(idx++, arg);
+        }
+
+        return spec
+                .map((row, meta) -> row.get(0, Long.class))
+                .one()
+                .defaultIfEmpty(0L);
+    }
+
     private record SearchSql(String sql, List<Object> args) {
     }
 
