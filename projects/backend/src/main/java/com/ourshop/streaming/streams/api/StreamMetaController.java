@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/streams")
@@ -46,5 +47,22 @@ public class StreamMetaController {
                     return new StreamMetaPageResponse(pageItems, Math.max(0, page), safeSize, total, totalPages);
                 });
     }
+
+    @GetMapping("/{id}")
+    public Mono<StreamMetaResponse> get(@PathVariable UUID id) {
+        return service.get(id).map(this::toResponse);
+    }
+
+    @PutMapping("/{id}/start")
+    public Mono<StreamMetaResponse> start(@PathVariable UUID id) {
+        return service.start(id).map(this::toResponse);
+    }
+
+    @PutMapping("/{id}/end")
+    public Mono<StreamMetaResponse> end(@PathVariable UUID id) {
+        return service.end(id).map(this::toResponse);
+    }
+
     
+
 }
