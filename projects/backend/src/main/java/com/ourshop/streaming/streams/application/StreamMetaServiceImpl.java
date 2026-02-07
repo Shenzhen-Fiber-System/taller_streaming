@@ -102,11 +102,11 @@ public class StreamMetaServiceImpl implements StreamMetaService {
 
     @Override
     public Mono<List<StreamMeta>> searchPage(String search, List<String> fields, int page, int size) {
-        return null;
+        return repository.searchPage(search, fields, page, size).collectList();
     }
 
     @Override
     public Mono<Long> countAll(String search, List<String> fields) {
-        return null;
+        return repository.countSearch(search, fields);
     }
 }
