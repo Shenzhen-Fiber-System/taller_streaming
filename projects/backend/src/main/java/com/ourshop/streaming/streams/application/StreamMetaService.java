@@ -19,4 +19,6 @@ public interface StreamMetaService {
     Mono<StreamMeta> end(UUID id);
 
     Mono<List<StreamMeta>> searchPage(String search, List<String> fields, int page, int size);
+
+    Mono<Long> countAll(String search, List<String> fields);
 }
