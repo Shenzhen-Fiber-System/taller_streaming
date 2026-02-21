@@ -4,8 +4,8 @@ server:
 spring:
   r2dbc:
     url: ${SPRING_R2DBC_URL:r2dbc:mysql://localhost:3306/streamingdb}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:root}
+    username: ${DB_USERNAME:server}
+    password: ${DB_PASSWORD:123456}
 
 management:
   endpoints:
@@ -13,7 +13,28 @@ management:
       exposure:
         include: health, info, metrics, prometheus
 
+janus:
+  url: ${JANUS_URL:https://taller.ourshop.work/janus}
+  api:
+    timeout-seconds: ${JANUS_API_TIMEOUT:30}
+  admin-key: ${JANUS_ADMIN_KEY:}
+  videoroom:
+    room-id: ${JANUS_ROOM_ID:1234}
+    secret: ${JANUS_ROOM_SECRET:}
+
+webrtc:
+  enabled: ${WEBRTC_ENABLED:true}
+  stun:
+    servers: ${WEBRTC_STUN_SERVERS:stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302}
+  turn:
+    server: ${WEBRTC_TURN_SERVER:}
+    username: ${WEBRTC_TURN_USERNAME:}
+    credential: ${WEBRTC_TURN_CREDENTIAL:}
+  hls:
+    output-dir: ${WEBRTC_HLS_OUTPUT_DIR:./data/webrtc-hls}
+    public-base-url: ${WEBRTC_HLS_PUBLIC_BASE_URL:https://taller.ourshop.work/webrtc-hls}
+
 http:
   logging:
     enabled: true
-    level: DEBUG 
+    level: DEBUG
