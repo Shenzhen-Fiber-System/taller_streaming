@@ -69,6 +69,7 @@ otro entrega health e ICE servers,
 y otro sirve playlist y segmentos HLS.”
 
 **[ACCIÓN]** Mostrar rápidamente rutas:
+
 - `GET /api/v1/webrtc/health`
 - `GET /api/v1/webrtc/ice-servers`
 - `POST /api/v1/streams/{streamId}/webrtc/offer`
